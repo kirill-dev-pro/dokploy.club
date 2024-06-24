@@ -15,6 +15,7 @@ RUN apt-get update \
       make \
       npm \
       cron \
+      curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
