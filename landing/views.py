@@ -34,7 +34,9 @@ def landing(request):
         cache.set("landing_stats", stats, settings.LANDING_CACHE_TIMEOUT)
 
     return render(request, "landing.html", {
-        "stats": stats
+        "stats": stats,
+        "app_name": settings.APP_NAME,
+        "app_description": settings.APP_DESCRIPTION,
     })
 
 
