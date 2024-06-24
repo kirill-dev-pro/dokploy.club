@@ -1,0 +1,178 @@
+version: "3.7"
+
+services:
+  nginx:
+    image: nginx:stable-alpine3.19-slim
+    ports:
+      - 80
+    networks:
+      - dokploy-network
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.club.rule=Host(`club.dokploy.kcrz.dev`)"
+      - "traefik.http.routers.club.entrypoints=websecure"
+      - "traefik.http.routers.club.tls.certResolver=letsencrypt"
+      - "traefik.http.services.club.loadbalancer.server.port=80"
+    volumes:
+      - ./etc/nginx:/etc/nginx/conf.d
+      - frontend:/var/www/frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100M"
+    depends_on:
+      - club_app
+
+  club_app: &app
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: make docker-run-production
+    restart: always
+    volumes:
+      - gdpr_downloads:/app/gdpr/downloads
+      - frontend:/tmp
+    depends_on:
+      - postgres
+      - redis
+      - queue
+    environment:
+      - MODE=${MODE:-production}
+      - PYTHONUNBUFFERED=1
+      - DEBUG=${DEBUG:-false}
+      # FQDN of the app e.g. https://vas3k.club/
+      - APP_HOST=${APP_HOST:-http://localhost/}
+      - APP_NAME=${APP_NAME:-Форк.клуб}
+      - APP_DESCRIPTION=${APP_DESCRIPTION:-"Форк.клуб — это сообщество людей, которые любят интернет и хотят сделать его лучше."}
+      # Pepic instance upload url e.g. https://i.vas3k.ru/upload
+      - MEDIA_UPLOAD_URL=${MEDIA_UPLOAD_URL:-https://i.vas3k.ru/upload}
+      - POSTGRES_DB=club
+      - POSTGRES_USER=club
+      - POSTGRES_PASSWORD=club
+      - POSTGRES_HOST=postgres
+      - REDIS_DB=0
+      - REDIS_HOST=redis
+      - EMAIL_HOST
+      - EMAIL_PORT
+      - DEFAULT_FROM_EMAIL
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100M"
+    networks:
+      - internal
+
+  queue:
+    <<: *app
+    command: make docker-run-queue
+    depends_on:
+      - postgres
+      - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100M"
+    networks:
+      - internal
+
+  # bot:
+  #   <<: *app
+  #   command: make docker-run-bot
+  #   depends_on:
+  #     - club_app
+  #     - postgres
+  #     - redis
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "100M"
+
+  # helpdeskbot:
+  #   <<: *app
+  #   command: make docker-run-helpdeskbot
+  #   depends_on:
+  #     - club_app
+  #     - postgres
+  #     - redis
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "100M"
+
+  cron:
+    <<: *app
+    command: make docker-run-cron
+    depends_on:
+      - club_app
+      - postgres
+      - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100M"
+    networks:
+      - internal
+
+  postgres:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_USER: club
+      POSTGRES_PASSWORD: club
+      POSTGRES_DB: club
+    volumes:
+      - club_pgdata:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: pg_isready -U club
+      interval: 60s
+      retries: 3
+      start_period: 20s
+      timeout: 10s
+    networks:
+      - internal
+
+  redis:
+    image: redis:alpine
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    healthcheck:
+      test: redis-cli ping
+      interval: 60s
+      retries: 3
+      start_period: 20s
+      timeout: 10s
+    networks:
+      - internal
+
+  # pepic:
+  #   image: ghcr.io/vas3k/pepic:${PEPIC_GITHUB_SHA:-latest}
+  #   environment: # check out pepic/config/app.go for more env variables
+  #     - BASE_URL=https://i.vas3k.ru/
+  #     - STORAGE_DIR=/uploads
+  #     - SECRET_CODE=${PEPIC_SECRET:-wowsosecret}
+  #     - IMAGE_ORIGINAL_LENGTH=1400
+  #     - MAX_UPLOAD_SIZE=100M
+  #   volumes:
+  #     - pepic_data:/uploads
+  #   ports:
+  #     - 8118:8118
+  #   user: "1000" # set your real uid (by default only root can read the uploaded files)
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "100M"
+
+volumes:
+  club_pgdata:
+  gdpr_downloads:
+  frontend:
+  # pepic_data:
+
+networks:
+  internal:
+    driver: bridge
+  dokploy-network:
+    external: true

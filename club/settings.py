@@ -11,7 +11,9 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv("SECRET_KEY") or "wow so secret"
-DEBUG = (os.getenv("DEBUG") != "false")  # SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = (
+    os.getenv("DEBUG") != "false"
+)  # SECURITY WARNING: don't run with debug turned on in production!
 TESTS_RUN = True if os.getenv("TESTS_RUN") else False
 
 ALLOWED_HOSTS = ["*", "127.0.0.1", "localhost", "0.0.0.0", "vas3k.club"]
@@ -96,9 +98,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler"
-        },
+        "console": {"class": "logging.StreamHandler"},
     },
     "loggers": {
         "": {  # "catch all" loggers by referencing it with the empty string
@@ -150,11 +150,7 @@ Q_CLUSTER = {
     "compress": True,
     "save_limit": 250,
     "queue_limit": 5000,
-    "redis": {
-        "host": REDIS_HOST,
-        "port": REDIS_PORT,
-        "db": os.getenv("REDIS_DB") or 0
-    }
+    "redis": {"host": REDIS_HOST, "port": REDIS_PORT, "db": os.getenv("REDIS_DB") or 0},
 }
 
 # Redis cache
@@ -165,7 +161,7 @@ CACHES = {
         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }
 
@@ -184,8 +180,10 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Вастрик.Клуб <c
 # App
 
 APP_HOST = os.environ.get("APP_HOST") or "http://127.0.0.1:8000"
-APP_NAME = "Вастрик.Клуб"
-APP_DESCRIPTION = "Всё интересное происходит за закрытыми дверями"
+APP_NAME = os.environ.get("APP_NAME", "Вастрик.Клуб")
+APP_DESCRIPTION = os.environ.get(
+    "APP_DESCRIPTION", "Всё интересное происходит за закрытыми дверями"
+)
 LAUNCH_DATE = datetime(2020, 4, 13)
 
 AUTH_CODE_LENGTH = 6
@@ -204,7 +202,9 @@ PROFILE_BADGES_PAGE_SIZE = 50
 
 COMMUNITY_APPROVE_UPVOTES = 35
 
-GDPR_ARCHIVE_STORAGE_PATH = os.getenv("GDPR_ARCHIVE_STORAGE_PATH") or os.path.join(BASE_DIR, "gdpr/downloads")
+GDPR_ARCHIVE_STORAGE_PATH = os.getenv("GDPR_ARCHIVE_STORAGE_PATH") or os.path.join(
+    BASE_DIR, "gdpr/downloads"
+)
 GDPR_ARCHIVE_URL = "/downloads/"
 GDPR_ARCHIVE_REQUEST_TIMEDELTA = timedelta(hours=6)
 GDPR_ARCHIVE_DELETE_TIMEDELTA = timedelta(hours=24)
@@ -270,7 +270,7 @@ TELEGRAM_CLUB_CHAT_URL = os.getenv("TELEGRAM_CLUB_CHAT_URL")
 TELEGRAM_CLUB_CHAT_ID = os.getenv("TELEGRAM_CLUB_CHAT_ID")
 TELEGRAM_ONLINE_CHANNEL_URL = os.getenv("TELEGRAM_ONLINE_CHANNEL_URL")
 TELEGRAM_ONLINE_CHANNEL_ID = os.getenv("TELEGRAM_ONLINE_CHANNEL_ID")
-TELEGRAM_BOT_WEBHOOK_URL = "https://vas3k.club/telegram/webhook/"
+TELEGRAM_BOT_WEBHOOK_URL = os.getenv("APP_HOST") + "telegram/webhook/"
 TELEGRAM_BOT_WEBHOOK_HOST = "0.0.0.0"
 TELEGRAM_BOT_WEBHOOK_PORT = 8816
 
@@ -290,15 +290,21 @@ RETRACT_VOTE_IN_HOURS = 3
 RETRACT_VOTE_TIMEDELTA = timedelta(hours=RETRACT_VOTE_IN_HOURS)
 RATE_LIMIT_POSTS_PER_DAY = 10
 RATE_LIMIT_COMMENTS_PER_DAY = 200
-POST_VIEW_COOLDOWN_PERIOD = timedelta(days=1)  # how much time must pass before a repeat viewing of a post counts
+POST_VIEW_COOLDOWN_PERIOD = timedelta(
+    days=1
+)  # how much time must pass before a repeat viewing of a post counts
 POST_HOTNESS_PERIOD = timedelta(days=5)  # time window for hotness recalculation script
-MAX_COMMENTS_FOR_DELETE_VS_CLEAR = 10  # number of comments after which the post cannot be deleted
+MAX_COMMENTS_FOR_DELETE_VS_CLEAR = (
+    10  # number of comments after which the post cannot be deleted
+)
 MIN_DAYS_TO_GIVE_BADGES = 35  # minimum "days" balance to buy and gift any badge
 MAX_MUTE_COUNT = 20  # maximum number of users allowed to mute
-CLEARED_POST_TEXT = "```\n" \
-    "😥 Этот пост был удален самим автором и от него остались лишь комментарии участников. " \
-    "Если вы хотите приютить и развить эту тему как новый автор, напишите модераторам Клуба: moderator@vas3k.club." \
+CLEARED_POST_TEXT = (
+    "```\n"
+    "😥 Этот пост был удален самим автором и от него остались лишь комментарии участников. "
+    "Если вы хотите приютить и развить эту тему как новый автор, напишите модераторам Клуба: moderator@vas3k.club."
     "\n```"
+)
 
 
 MODERATOR_USERNAME = "moderator"
@@ -324,15 +330,14 @@ WEBPACK_LOADER = {
 
 if SENTRY_DSN and not DEBUG:
     # activate sentry on production
-    sentry_sdk.init(dsn=SENTRY_DSN, integrations=[
-        DjangoIntegration(),
-        RedisIntegration(),
-    ])
-    Q_CLUSTER["error_reporter"] = {
-        "sentry": {
-            "dsn": SENTRY_DSN
-        }
-    }
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+            RedisIntegration(),
+        ],
+    )
+    Q_CLUSTER["error_reporter"] = {"sentry": {"dsn": SENTRY_DSN}}
 
 if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
