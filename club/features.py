@@ -1,3 +1,5 @@
+import os
+
 # FEATURE-FLAGS
 # Use them to enable/disable different functions
 # We recommend to create new feature-flags if you want to add new features or disable existing ones in your fork
@@ -6,8 +8,8 @@
 # Hide posts feed (main page) from unauthorized users
 #   True — feed is only visible to club members, other users will be redirected to landing page
 #   False — everyone can view the feed, it becomes the main page
-PRIVATE_FEED = True
+PRIVATE_FEED = os.getenv("PRIVATE_FEED", "True") == "True"
 
 # Enable auth and payment via Patreon
 #   See settings.py for more configs (PATREON_ - prefixed)
-PATREON_AUTH_ENABLED = True
+PATREON_AUTH_ENABLED = os.getenv("PATREON_AUTH_ENABLED", "False") == "True"
