@@ -8,12 +8,6 @@ services:
         networks:
             - dokploy-network
             - internal
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.club.rule=Host(`club.dokploy.kcrz.dev`)"
-            - "traefik.http.routers.club.entrypoints=websecure"
-            - "traefik.http.routers.club.tls.certResolver=letsencrypt"
-            - "traefik.http.services.club.loadbalancer.server.port=80"
         volumes:
             - ./etc/nginx:/etc/nginx/conf.d
             - frontend:/var/www/frontend
@@ -53,9 +47,9 @@ services:
             - POSTGRES_HOST=postgres
             - REDIS_DB=0
             - REDIS_HOST=redis
-            - EMAIL_HOST
-            - EMAIL_PORT
-            - DEFAULT_FROM_EMAIL
+        # Required to apply env from Dokploy env tab
+        env_file:
+            - .env
         logging:
             driver: "json-file"
             options:
