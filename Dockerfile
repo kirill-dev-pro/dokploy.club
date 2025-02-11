@@ -20,11 +20,7 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY . /app
-COPY etc/crontab /etc/crontab
-RUN chmod 600 /etc/crontab
-
-RUN cd frontend && npm ci && npm run build && cd ..
+COPY Pipfile Pipfile.lock /app/
 
 RUN pip3 install pipenv
 RUN if [ "$MODE" = "production" ]; then \
@@ -34,3 +30,10 @@ RUN if [ "$MODE" = "production" ]; then \
     fi
 
 RUN pip3 install --ignore-installed -r requirements.txt
+
+COPY . /app
+COPY etc/crontab /etc/crontab
+RUN chmod 600 /etc/crontab
+
+RUN cd frontend && npm ci && npm run build && cd ..
+
